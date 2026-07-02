@@ -1,5 +1,13 @@
-import { Composition } from "remotion";
+import { Composition, Still } from "remotion";
 import { Video, RenderTimeline } from "./Video";
+import { Thumbnail, ThumbnailProps } from "./Thumbnail";
+
+const emptyThumbnail: ThumbnailProps = {
+  headline: "",
+  karyaFrame: null,
+  width: 1080,
+  height: 1920,
+};
 
 // Timeline data is passed in wholesale via --props=<path-to-render.json>
 // (Remotion's CLI accepts a JSON file path there, not just inline JSON) --
@@ -16,6 +24,7 @@ const emptyTimeline: RenderTimeline = {
 
 export const RemotionRoot: React.FC = () => {
   return (
+    <>
     <Composition
       id="Video"
       component={Video}
@@ -31,5 +40,17 @@ export const RemotionRoot: React.FC = () => {
         height: props.height,
       })}
     />
+    <Still
+      id="Thumbnail"
+      component={Thumbnail}
+      width={emptyThumbnail.width}
+      height={emptyThumbnail.height}
+      defaultProps={emptyThumbnail}
+      calculateMetadata={async ({ props }) => ({
+        width: props.width,
+        height: props.height,
+      })}
+    />
+    </>
   );
 };

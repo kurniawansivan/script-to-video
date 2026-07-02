@@ -45,7 +45,8 @@ async function main() {
   }
 
   const beatsPath = resolve("remotion/public/timelines", `${slugArg}.beats.json`);
-  const { slug, beats } = JSON.parse(readFileSync(beatsPath, "utf8"));
+  const beatsFile = JSON.parse(readFileSync(beatsPath, "utf8"));
+  const { slug, beats } = beatsFile;
 
   // relBrollDir/destPath: broll is stored under remotion/public so Remotion's
   // staticFile() can address it by the relative path alone (relBroll).
@@ -86,7 +87,7 @@ async function main() {
     beat.broll = relBroll;
   }
 
-  writeFileSync(beatsPath, JSON.stringify({ slug, beats }, null, 2));
+  writeFileSync(beatsPath, JSON.stringify({ ...beatsFile, slug, beats }, null, 2));
   console.log(`Selesai. Beat tanpa broll perlu diisi manual sebelum render.`);
 }
 

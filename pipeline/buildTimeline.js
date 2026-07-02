@@ -27,35 +27,61 @@ function parseArgs(argv) {
   return args;
 }
 
+// Word timing (beat-relative frames) drives the karaoke-style kinetic
+// caption in Caption.tsx -- without it, captions can only pop in/out as one
+// block per beat, which is the "flat" look we're moving away from.
 function estimateDurationsFromWordCount(beats, fps) {
   let cursor = 0;
   return beats.map((beat) => {
-    const seconds = Math.max(MIN_BEAT_SECONDS, beat.wordCount / WORDS_PER_SECOND);
+    const words = beat.text.split(/\s+/).filter(Boolean);
+    const seconds = Math.max(MIN_BEAT_SECONDS, words.length / WORDS_PER_SECOND);
     const durationFrames = Math.round(seconds * fps);
     const startFrame = cursor;
     cursor += durationFrames;
-    return { ...beat, startFrame, durationFrames };
+
+    const perWordFrames = durationFrames / words.length;
+    const wordTimings = words.map((text, i) => ({
+      text,
+      startFrame: Math.round(i * perWordFrames),
+      endFrame: Math.round((i + 1) * perWordFrames),
+    }));
+
+    return { ...beat, startFrame, durationFrames, words: wordTimings };
   });
 }
 
 function timingsFromAlignment(beats, alignment, fps) {
   // alignment.words: [{ word, start, end }] in seconds, in the same reading
   // order as the beats' text (e.g. from a Whisper word-timestamp pass).
+  // Display text stays the original script word (so typography/casing
+  // matches the brand copy) -- only the timing comes from Whisper.
   const words = alignment.words;
   let wordCursor = 0;
   return beats.map((beat) => {
-    const beatWordCount = beat.text.split(/\s+/).filter(Boolean).length;
-    const slice = words.slice(wordCursor, wordCursor + beatWordCount);
-    wordCursor += beatWordCount;
+    const originalWords = beat.text.split(/\s+/).filter(Boolean);
+    const slice = words.slice(wordCursor, wordCursor + originalWords.length);
+    wordCursor += originalWords.length;
     const start = slice.length ? slice[0].start : 0;
     const end = slice.length
       ? slice[slice.length - 1].end
       : start + beat.wordCount / WORDS_PER_SECOND;
-    return {
-      ...beat,
-      startFrame: Math.round(start * fps),
-      durationFrames: Math.max(1, Math.round((end - start) * fps)),
-    };
+    const startFrame = Math.round(start * fps);
+    const durationFrames = Math.max(1, Math.round((end - start) * fps));
+
+    const wordTimings = originalWords.map((text, i) => {
+      const w = slice[i];
+      const evenStart = Math.round((i * durationFrames) / originalWords.length);
+      const evenEnd = Math.round(((i + 1) * durationFrames) / originalWords.length);
+      const wStartFrame = w ? Math.round(w.start * fps) - startFrame : evenStart;
+      const wEndFrame = w ? Math.round(w.end * fps) - startFrame : evenEnd;
+      return {
+        text,
+        startFrame: Math.max(0, wStartFrame),
+        endFrame: Math.max(wStartFrame + 1, wEndFrame),
+      };
+    });
+
+    return { ...beat, startFrame, durationFrames, words: wordTimings };
   });
 }
 
@@ -92,6 +118,7 @@ function main() {
   const renderBeats = timedBeats.map((b) => ({
     index: b.index,
     text: b.text,
+    words: b.words,
     startFrame: b.startFrame,
     durationFrames: b.durationFrames,
     broll: b.broll ?? null,

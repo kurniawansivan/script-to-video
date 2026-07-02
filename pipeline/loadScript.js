@@ -35,17 +35,24 @@ export function loadScript(inputPath, slugOverride) {
     if (!Array.isArray(data.scenes) || data.scenes.length === 0) {
       throw new Error('Script JSON butuh array "scenes" dengan minimal 1 scene.');
     }
-    return { slug: slugOverride || data.slug, beats: beatsFromScenes(data.scenes) };
+    return {
+      slug: slugOverride || data.slug,
+      beats: beatsFromScenes(data.scenes),
+      // Optional { headline, karyaPose } override for the thumbnail (see
+      // Thumbnail.tsx) -- generate.js falls back to deriving one from the
+      // first scene's text when this is absent.
+      thumbnail: data.thumbnail || null,
+    };
   }
 
   const slug = slugOverride || basename(inputPath, ext);
-  return { slug, beats: beatsFromText(raw) };
+  return { slug, beats: beatsFromText(raw), thumbnail: null };
 }
 
 export function loadScriptToFile(inputPath, slugOverride) {
-  const { slug, beats } = loadScript(inputPath, slugOverride);
+  const { slug, beats, thumbnail } = loadScript(inputPath, slugOverride);
   mkdirSync(resolve("remotion/public/timelines"), { recursive: true });
   const outPath = resolve("remotion/public/timelines", `${slug}.beats.json`);
-  writeFileSync(outPath, JSON.stringify({ slug, beats }, null, 2));
-  return { slug, beats, outPath };
+  writeFileSync(outPath, JSON.stringify({ slug, beats, thumbnail }, null, 2));
+  return { slug, beats, thumbnail, outPath };
 }

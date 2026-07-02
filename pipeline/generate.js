@@ -5,7 +5,7 @@ import { loadScriptToFile } from "./loadScript.js";
 import { startStaticServer } from "./staticServer.js";
 
 function parseArgs(argv) {
-  const args = { fps: 30, width: 1080, height: 1920, draft: false };
+  const args = { fps: 30, width: 1080, height: 1920, draft: false, ratio: "both" };
   const positional = [];
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
@@ -14,10 +14,22 @@ function parseArgs(argv) {
     else if (a === "--fps") args.fps = Number(argv[++i]);
     else if (a === "--width") args.width = Number(argv[++i]);
     else if (a === "--height") args.height = Number(argv[++i]);
+    else if (a === "--ratio") args.ratio = argv[++i];
     else positional.push(a);
   }
   args.input = positional[0];
   return args;
+}
+
+// Even width/height required for yuv420p encoding.
+const toEven = (n) => Math.round(n / 2) * 2;
+
+function aspectVariants(args) {
+  const nineBySixteen = { label: "9x16", width: args.width, height: args.height };
+  const fourByFive = { label: "4x5", width: args.width, height: toEven((args.width * 5) / 4) };
+  if (args.ratio === "9:16") return [nineBySixteen];
+  if (args.ratio === "4:5") return [fourByFive];
+  return [nineBySixteen, fourByFive];
 }
 
 function findVoAudio(slug) {
@@ -92,12 +104,28 @@ function tryAlign(slug, voRel) {
   return alignRel;
 }
 
-// Rewrite the render.json's asset paths to absolute http URLs served by our
+// Clone the base (9:16) render.json into a variant with different pixel
+// dimensions -- beats/broll/karya/audio content is identical, only the
+// composition width/height (and therefore the % positions and vw font
+// sizes) differ, which is why Caption/KaryaOverlay were switched to
+// percentage-based layout: the same timeline data now renders correctly at
+// either aspect without touching content logic.
+function writeAspectVariant(slug, variant) {
+  const basePath = resolve("remotion/public/timelines", `${slug}.render.json`);
+  const timeline = JSON.parse(readFileSync(basePath, "utf8"));
+  timeline.width = variant.width;
+  timeline.height = variant.height;
+
+  const variantPath = resolve("remotion/public/timelines", `${slug}-${variant.label}.render.json`);
+  writeFileSync(variantPath, JSON.stringify(timeline, null, 2));
+  return variantPath;
+}
+
+// Rewrite a render.json's asset paths to absolute http URLs served by our
 // own static server (see pipeline/staticServer.js) so Remotion's render
 // step doesn't go through its own public-dir copy, which races on the
 // first never-before-requested asset in a render and 404s.
-function pointRenderJsonAtServer(slug, baseUrl) {
-  const renderPath = resolve("remotion/public/timelines", `${slug}.render.json`);
+function pointRenderJsonAtServer(renderPath, baseUrl) {
   const timeline = JSON.parse(readFileSync(renderPath, "utf8"));
   const toUrl = (relPath) => `${baseUrl}/${relPath}`;
 
@@ -111,6 +139,25 @@ function pointRenderJsonAtServer(slug, baseUrl) {
   writeFileSync(renderPath, JSON.stringify(timeline, null, 2));
 }
 
+function loadPoses() {
+  const posesPath = resolve("remotion/public/karya/poses.json");
+  if (!existsSync(posesPath)) return {};
+  return JSON.parse(readFileSync(posesPath, "utf8"));
+}
+
+function deriveHeadline(firstBeatText) {
+  const words = firstBeatText.replace(/[.?!]+$/, "").split(/\s+/);
+  const trimmed = words.length > 8 ? `${words.slice(0, 8).join(" ")}...` : words.join(" ");
+  return trimmed.toUpperCase();
+}
+
+function writeThumbnailVariant(slug, variant, headline, karyaFrame) {
+  const props = { headline, karyaFrame, width: variant.width, height: variant.height };
+  const propsPath = resolve("remotion/public/timelines", `${slug}-${variant.label}.thumbnail.json`);
+  writeFileSync(propsPath, JSON.stringify(props, null, 2));
+  return propsPath;
+}
+
 async function main() {
   const args = parseArgs(process.argv.slice(2));
   if (!args.input) {
@@ -118,7 +165,7 @@ async function main() {
     process.exit(1);
   }
 
-  const { slug } = loadScriptToFile(args.input, args.slug);
+  const { slug, beats, thumbnail } = loadScriptToFile(args.input, args.slug);
   console.log(`Script dimuat -> slug "${slug}"`);
 
   run("node", ["pipeline/fetchBroll.js", slug], "Ambil b-roll (Pexels)");
@@ -146,28 +193,48 @@ async function main() {
   run("node", buildArgs, "Bangun timeline");
 
   mkdirSync(resolve("output"), { recursive: true });
-  const outPath = resolve("output", `${slug}.mp4`);
+  const variants = aspectVariants(args);
+  const outPaths = [];
+
+  const poses = loadPoses();
+  const karyaPoseName = thumbnail?.karyaPose || "celebrate";
+  const karyaPoseAsset = poses[karyaPoseName];
+  const karyaFrameRel = karyaPoseAsset?.type === "frames" ? karyaPoseAsset.frames[0] : null;
+  const headline = thumbnail?.headline || deriveHeadline(beats[0].text);
 
   const { server, baseUrl } = await startStaticServer(resolve("remotion/public"));
   try {
-    pointRenderJsonAtServer(slug, baseUrl);
-    await runAsync(
-      "npx",
-      [
-        "remotion",
-        "render",
-        "remotion/src/index.ts",
-        "Video",
-        outPath,
-        `--props=remotion/public/timelines/${slug}.render.json`,
-      ],
-      "Render video"
-    );
+    for (const variant of variants) {
+      const renderPath = writeAspectVariant(slug, variant);
+      pointRenderJsonAtServer(renderPath, baseUrl);
+
+      const outPath = resolve("output", `${slug}-${variant.label}.mp4`);
+      await runAsync(
+        "npx",
+        ["remotion", "render", "remotion/src/index.ts", "Video", outPath, `--props=${renderPath}`],
+        `Render video (${variant.label})`
+      );
+      outPaths.push(outPath);
+
+      const thumbPropsPath = writeThumbnailVariant(
+        slug,
+        variant,
+        headline,
+        karyaFrameRel ? `${baseUrl}/${karyaFrameRel}` : null
+      );
+      const thumbOutPath = resolve("output", `${slug}-${variant.label}-thumb.png`);
+      await runAsync(
+        "npx",
+        ["remotion", "still", "remotion/src/index.ts", "Thumbnail", thumbOutPath, `--props=${thumbPropsPath}`],
+        `Render thumbnail (${variant.label})`
+      );
+      outPaths.push(thumbOutPath);
+    }
   } finally {
     server.close();
   }
 
-  console.log(`\nSelesai -> ${outPath}`);
+  console.log(`\nSelesai -> ${outPaths.join(", ")}`);
 }
 
 main().catch((err) => {

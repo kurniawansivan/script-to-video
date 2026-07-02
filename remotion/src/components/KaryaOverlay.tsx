@@ -17,8 +17,13 @@ export const KaryaOverlay: React.FC<{ asset: KaryaAsset | null }> = ({ asset }) 
   if (!asset) return null;
 
   const body =
+    // Note: this OffthreadVideo does not loop -- Remotion's version here
+    // has no `loop` prop on it, and wrapping in <Loop> needs a known
+    // durationInFrames we don't have for arbitrary source clips. Prefer
+    // "frames" (PNG sequence) poses in practice; this branch exists for
+    // completeness if a pre-looped video asset is ever supplied directly.
     asset.type === "video" ? (
-      <OffthreadVideo src={resolveSrc(asset.src)} loop muted style={{ width: "100%" }} />
+      <OffthreadVideo src={resolveSrc(asset.src)} muted style={{ width: "100%" }} />
     ) : (
       <Img
         src={resolveSrc(
@@ -28,5 +33,7 @@ export const KaryaOverlay: React.FC<{ asset: KaryaAsset | null }> = ({ asset }) 
       />
     );
 
-  return <div style={{ position: "absolute", right: 16, bottom: 340, width: 300 }}>{body}</div>;
+  // % units (not px) so this lands in the same relative spot whether we
+  // render 9:16 or 4:5 -- top-right, with margin so it doesn't hug the edge.
+  return <div style={{ position: "absolute", top: "7%", right: "6%", width: "26%" }}>{body}</div>;
 };

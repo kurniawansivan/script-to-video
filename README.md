@@ -1,6 +1,6 @@
 # Pustaka Sukses — Auto Generate
 
-Tool otomasi buat rakit reel edukasi (@pustaka.sukses) dari script JSON (scene per scene): cari b-roll → voiceover → sinkron caption/Karya → render 9:16. Render-nya lokal (Remotion + ffmpeg), gratis, jalan lewat terminal, **satu command** buat seluruh flow.
+Tool otomasi buat rakit reel edukasi (@pustaka.sukses) dari script JSON (scene per scene): cari b-roll → voiceover → kinetic caption per-kata sinkron VO → Karya → render 9:16 + 4:5 + thumbnail. Render-nya lokal (Remotion + ffmpeg), gratis, jalan lewat terminal, **satu command** buat seluruh flow.
 
 **Catatan model kerja:** langkah voiceover & b-roll custom (Higgsfield) butuh tool MCP yang cuma bisa dipanggil di sesi chat Claude — bukan CLI yang jalan sendiri tanpa Claude. Jadi alurnya: kamu kasih script ke Claude di chat → generate VO lewat Claude (atau upload rekaman asli) → jalanin satu command di bawah → keluar video jadi di `output/`.
 
@@ -28,7 +28,7 @@ pipeline/
   align.py                       whisper alignment (word-level timestamp)
   staticServer.js                 static server lokal buat serve asset ke render (lihat "Kenapa ada static server")
 remotion/
-  src/                       komposisi video (Video.tsx, Caption.tsx, KaryaOverlay.tsx)
+  src/                       komposisi video (Video.tsx, Caption.tsx, KaryaOverlay.tsx, Thumbnail.tsx)
   public/
     timelines/               *.beats.json & *.render.json (di-generate tiap run, gitignored)
     broll-cache/<slug>/      hasil download Pexels per reel (gitignored)
@@ -61,20 +61,23 @@ Field per scene:
 
 Jumlah scene bebas, tinggal nambah/kurangin elemen array.
 
-**2. Siapkan voiceover** — minta Claude generate TTS lewat Higgsfield di chat, atau upload rekaman asli. Simpan ke `remotion/public/vo/<slug>.mp3` (nama file harus sama dengan `slug` di JSON).
+Field opsional tambahan di level script (bukan per-scene):
+- `thumbnail: { headline, karyaPose }` — teks besar + pose Karya buat thumbnail. Kosongkan biar auto-diambil dari kalimat scene pertama.
+
+**2. Siapkan voiceover** — minta Claude generate TTS lewat Higgsfield di chat (**pakai `text2speech_v2` variant `minimax`**, bukan `seed_audio` — seed_audio kedengeran aksen asing buat Bahasa Indonesia, minimax jauh lebih natural, sudah dibandingin langsung), atau upload rekaman asli. Simpan ke `remotion/public/vo/<slug>.mp3` (nama file harus sama dengan `slug` di JSON).
 
 **3. Jalankan satu command:**
 ```
 node pipeline/generate.js path/ke/script.json
 ```
-Ini otomatis: load script → fetch b-roll (Pexels) → align VO ke timestamp (whisper, auto-install kalau belum ada) → build timeline → render → `output/<slug>.mp4`.
+Ini otomatis: load script → fetch b-roll (Pexels) → align VO ke timestamp per-kata (whisper, auto-install kalau belum ada) → build timeline → render **9:16 dan 4:5** + thumbnail PNG masing-masing rasio → `output/<slug>-9x16.mp4`, `output/<slug>-4x5.mp4`, `output/<slug>-9x16-thumb.png`, `output/<slug>-4x5-thumb.png`.
 
 Belum ada VO? Pakai `--draft` buat preview cepat (timing estimasi kasar dari jumlah kata, tanpa audio):
 ```
 node pipeline/generate.js path/ke/script.json --draft
 ```
 
-Opsi lain: `--slug nama` (override slug dari JSON), `--fps`, `--width`, `--height`.
+Opsi lain: `--slug nama` (override slug dari JSON), `--fps`, `--width`, `--height`, `--ratio 9:16` atau `--ratio 4:5` (default render dua-duanya, pakai ini kalau cuma butuh satu buat iterasi cepat).
 
 **4. Preview interaktif (opsional)** — `npm run studio` buka Remotion Studio buat scrub timeline manual sebelum render final.
 
@@ -82,9 +85,19 @@ Opsi lain: `--slug nama` (override slug dari JSON), `--fps`, `--width`, `--heigh
 
 Ditemukan bug race-condition di `remotion render` bawaan: tiap render, dia nyalin folder `public/` ke folder temp, dan asset PERTAMA yang diminta (belum pernah dipakai sebelumnya) konsisten 404 karena diminta sebelum proses salin kelar — sudah diverifikasi lewat beberapa percobaan (tuker posisi file, delay start frame, path absolut, hasilnya selalu sama: siapapun file yang "pertama dipakai" gagal). `generate.js` jalanin static server sendiri buat folder `public/` dan render ambil asset dari situ, bukan dari mekanisme copy Remotion yang race. Kalau render manual langsung pakai `npx remotion render` (bukan lewat `generate.js`), bug ini bisa muncul lagi.
 
+## Gaya editing (biar gak flat)
+
+- **Kinetic caption per-kata** — tiap kata muncul (pop-in + scale) sesuai timestamp asli dari whisper alignment, bukan satu blok kalimat langsung nongol. Kata yang lagi diucapin di-highlight amber; kata ALLCAPS (AI, PANG, UMKM, dst) permanen amber buat penekanan.
+- **Ken Burns zoom** — b-roll zoom perlahan (1.0→1.08) sepanjang durasi beat, gak pernah benar-benar diam.
+- **Punch-in per cut** — tiap beat baru mulai dengan scale pulse cepat (1.06→1.0), biar transisi kerasa sebagai cut yang disengaja.
+- **Progress bar** amber tipis di atas, nunjukkin posisi nonton (dorongan buat nonton sampai habis).
+- **Gradient overlay** di bawah layar buat kontras caption, bukan cuma text-shadow doang.
+
+Semua logic ini ada di `remotion/src/Video.tsx` (BrollBackground, BeatContent, ProgressBar) dan `remotion/src/components/Caption.tsx`.
+
 ## Karya mascot — nambah/ganti pose
 
-`remotion/public/karya/poses.json` memetakan nama pose (dipakai lewat `karyaPose` di script JSON) ke aset. Overlay-nya nempel di pojok kanan bawah komposisi (`KaryaOverlay.tsx`).
+`remotion/public/karya/poses.json` memetakan nama pose (dipakai lewat `karyaPose` di script JSON) ke aset. Overlay-nya nempel di pojok kanan atas komposisi (`KaryaOverlay.tsx`), pakai unit % biar konsisten di 9:16 maupun 4:5.
 
 Pose harus berupa **frame PNG terpisah**, bukan video/GIF langsung — h264/mp4 gak bisa nyimpen alpha channel, jadi convert GIF transparan ke mp4 bakal nampilin kotak putih nutupin latar (sudah kejadian, sudah diperbaiki). Kalau ada GIF baru dari Higgsfield/Canva, extract dulu jadi PNG per-frame (alpha ke-preserve):
 
@@ -102,7 +115,7 @@ Pose yang sudah ada sekarang (dari 10 GIF gerak dasar): `idle`, `greet`, `point`
 
 ## Contoh yang sudah dites
 
-[pipeline/reel-2jul-pang.json](pipeline/reel-2jul-pang.json) — reel "Rumus PANG" (adaptasi dari kalender konten #13), full pipeline: TTS Higgsfield → align whisper → b-roll Pexels → Karya per-scene → render. Hasil di `output/reel-2jul-pang.mp4`. Pakai ini sebagai referensi format kalau bikin script baru.
+[pipeline/reel-2jul-pang.json](pipeline/reel-2jul-pang.json) — reel "Rumus PANG" (adaptasi dari kalender konten #13), full pipeline: TTS Higgsfield (minimax) → align whisper → b-roll Pexels → Karya per-scene → kinetic caption → render 9:16 + 4:5 + thumbnail. Hasil di `output/reel-2jul-pang-9x16.mp4`, `-4x5.mp4`, dan thumbnail `-9x16-thumb.png` / `-4x5-thumb.png`. Pakai ini sebagai referensi format kalau bikin script baru.
 
 ## Lain-lain
 

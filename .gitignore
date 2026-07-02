@@ -10,6 +10,7 @@ remotion/public/vo/*
 remotion/public/timelines/*.beats.json
 remotion/public/timelines/*.render.json
 remotion/public/timelines/*.align.json
+remotion/public/timelines/*.thumbnail.json
 output/*
 !output/.gitkeep
 .remotion/

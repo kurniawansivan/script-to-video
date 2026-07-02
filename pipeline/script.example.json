@@ -1,5 +1,9 @@
 {
   "slug": "reel1",
+  "thumbnail": {
+    "headline": "AI BAKAL GANTIIN KAMU?",
+    "karyaPose": "greet"
+  },
   "scenes": [
     {
       "text": "Semua orang takut AI bakal ngrebut kerjaan. Padahal yang ngerti rahasia ini malah DIBAYAR gara-gara AI.",
