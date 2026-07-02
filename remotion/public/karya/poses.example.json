@@ -1,0 +1,27 @@
+{
+  "_comment": "Copy this to poses.json once real Karya assets are in remotion/public/karya/. Each key is a karyaPose name used in the script JSON (see pipeline/script.example.json).",
+  "idle": {
+    "type": "frames",
+    "fps": 6,
+    "frames": ["karya/idle-01.png", "karya/idle-02.png", "karya/idle-03.png"]
+  },
+  "greet": {
+    "type": "frames",
+    "fps": 8,
+    "frames": ["karya/greet-01.png", "karya/greet-02.png", "karya/greet-03.png", "karya/greet-04.png"]
+  },
+  "point": {
+    "type": "frames",
+    "fps": 6,
+    "frames": ["karya/point-01.png", "karya/point-02.png"]
+  },
+  "celebrate": {
+    "type": "frames",
+    "fps": 8,
+    "frames": ["karya/celebrate-01.png", "karya/celebrate-02.png"]
+  },
+  "talking": {
+    "type": "video",
+    "src": "karya/talking-01.mp4"
+  }
+}

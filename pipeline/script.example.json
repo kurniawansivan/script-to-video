@@ -1,0 +1,29 @@
+{
+  "slug": "reel1",
+  "scenes": [
+    {
+      "text": "Semua orang takut AI bakal ngrebut kerjaan. Padahal yang ngerti rahasia ini malah DIBAYAR gara-gara AI.",
+      "visualQuery": "worried person looking at phone",
+      "karyaPose": "greet"
+    },
+    {
+      "text": "Klien nggak bayar AI — klien bayar orang yang tau cara nyuruh AI.",
+      "visualQuery": "confident person office",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "AI itu kayak karyawan: kerja 24 jam, nggak digaji bulanan. Yang dibayar kamu, bosnya.",
+      "karyaPose": "idle"
+    },
+    {
+      "text": "Skill paling gampang buat mulai cuma butuh HP.",
+      "visualQuery": "smartphone golden hour",
+      "karyaPose": "point"
+    },
+    {
+      "text": "Aku ajarin step-by-step di seri Karyawan AI — follow dulu.",
+      "karyaPose": "celebrate",
+      "cta": true
+    }
+  ]
+}

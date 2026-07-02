@@ -1,0 +1,41 @@
+{
+  "slug": "reel-2jul-pang",
+  "scenes": [
+    {
+      "text": "Caption AI kamu masih kedengeran kayak robot? Ada rumus gampang biar keliatan manusiawi.",
+      "visualQuery": "frustrated person typing laptop",
+      "karyaPose": "greet"
+    },
+    {
+      "text": "Namanya PANG, empat huruf, empat pertanyaan simpel sebelum nge-prompt AI.",
+      "visualQuery": "smartphone notes writing",
+      "karyaPose": "point"
+    },
+    {
+      "text": "P itu Peran, kamu mau AI jadi siapa? Copywriter, teman curhat, atau sales?",
+      "visualQuery": "professional thinking role",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "A itu Audiens, captionmu buat siapa? Ibu-ibu UMKM beda gaya sama anak Gen Z.",
+      "visualQuery": "diverse people small business",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "N itu Niat, captionnya mau jualan, edukasi, atau sekadar dekat sama followers?",
+      "visualQuery": "goal target focus",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "G itu Gaya, santai, formal, atau lucu? Sebutin biar AI nggak nebak-nebak.",
+      "visualQuery": "creative writing notebook",
+      "karyaPose": "think"
+    },
+    {
+      "text": "Comment PANG di bawah, aku kirim template promptnya gratis.",
+      "visualQuery": "smartphone notification comment",
+      "karyaPose": "celebrate",
+      "cta": true
+    }
+  ]
+}

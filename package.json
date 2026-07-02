@@ -1,0 +1,26 @@
+{
+  "name": "pustaka-sukses-auto-generate",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node pipeline/generate.js",
+    "parse": "node pipeline/parseScript.js",
+    "fetch-broll": "node pipeline/fetchBroll.js",
+    "build-timeline": "node pipeline/buildTimeline.js",
+    "studio": "remotion studio remotion/src/index.ts",
+    "render": "remotion render remotion/src/index.ts Video"
+  },
+  "dependencies": {
+    "@remotion/cli": "^4.0.0",
+    "@remotion/google-fonts": "^4.0.484",
+    "@remotion/media-utils": "^4.0.0",
+    "dotenv": "^16.4.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "remotion": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3"
+  }
+}
