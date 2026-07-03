@@ -83,6 +83,36 @@ function estimateDurationsFromWordCount(beats, fps) {
   });
 }
 
+// Indices of whisper words that end a sentence (. ! ?) -- candidate pause
+// points to snap a beat boundary onto. Numbers read out as digits
+// ("150-300") don't end a sentence so they never produce a false snap
+// point mid-number.
+function terminalIndices(words) {
+  const idx = [];
+  words.forEach((w, i) => {
+    if (/[.!?]$/.test(w.word.trim())) idx.push(i);
+  });
+  return idx;
+}
+
+// Nearest terminal index to `target` (searching from `minIdx` onward,
+// within `window` tokens). Ties resolve to the earlier index, which in
+// practice is the correct one slightly more often (a beat's own
+// sentence-end is reached before the next beat's).
+function snapToTerminal(terminalIdx, target, minIdx, window) {
+  let best = null;
+  let bestDist = Infinity;
+  for (const idx of terminalIdx) {
+    if (idx < minIdx) continue;
+    const dist = Math.abs(idx - target);
+    if (dist <= window && dist < bestDist) {
+      best = idx;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
 function timingsFromAlignment(beats, alignment, fps) {
   // alignment.words: [{ word, start, end }] in seconds, in the same reading
   // order as the beats' text (e.g. from a Whisper word-timestamp pass).
@@ -94,24 +124,42 @@ function timingsFromAlignment(beats, alignment, fps) {
 
   // Whisper's transcript word count can differ from the script's -- most
   // often spoken numbers ("seratus lima puluh ribu", 4 words) coming back
-  // as digits ("150.000", 1 token). Naive fixed-size slicing then drifts
-  // cumulatively across every later beat. Slice boundaries are scaled by
-  // the count ratio instead: exact when counts match, gracefully
-  // approximate when they don't.
-  const ratio = words.length / totalScriptWords;
-  if (words.length !== totalScriptWords) {
-    console.warn(
-      `Jumlah kata whisper (${words.length}) != script (${totalScriptWords}) -- slicing proporsional, cek hasilnya di studio.`
-    );
-  }
+  // as digits ("150-300", 2 tokens) -- so a naive word-count-ratio slice
+  // boundary lands mid-sentence, ahead of where the VO actually is.
+  // Requiring whisper's sentence breaks to match beats 1:1 doesn't work
+  // either: whisper's punctuation restoration doesn't always agree with
+  // the script's (a script comma sometimes comes back as a period,
+  // splitting one beat into several whisper "sentences"). So: compute the
+  // proportional boundary as before, then snap it onto the nearest actual
+  // sentence-ending word within a small window -- exact when whisper's
+  // punctuation lines up with the script, still close when it doesn't,
+  // and never worse than the plain proportional guess.
+  const ratio = totalScriptWords > 0 ? words.length / totalScriptWords : 1;
+  const terminalIdx = terminalIndices(words);
+  const SNAP_WINDOW = 6;
 
   let cumScript = 0;
+  let sliceStart = 0;
+  const slices = beats.map((beat, beatIdx) => {
+    const originalWords = beatWords[beatIdx];
+    cumScript += originalWords.length;
+    let sliceEndExclusive;
+    if (beatIdx === beats.length - 1) {
+      sliceEndExclusive = words.length;
+    } else {
+      const target = Math.round(cumScript * ratio) - 1;
+      const snapped = snapToTerminal(terminalIdx, target, sliceStart, SNAP_WINDOW);
+      const guess = snapped ?? Math.max(sliceStart, target);
+      sliceEndExclusive = Math.max(sliceStart + 1, Math.min(guess + 1, words.length));
+    }
+    const slice = words.slice(sliceStart, sliceEndExclusive);
+    sliceStart = sliceEndExclusive;
+    return slice;
+  });
+
   return beats.map((beat, beatIdx) => {
     const originalWords = beatWords[beatIdx];
-    const sliceStart = Math.round(cumScript * ratio);
-    cumScript += originalWords.length;
-    const sliceEnd = Math.max(sliceStart + 1, Math.round(cumScript * ratio));
-    const slice = words.slice(sliceStart, Math.min(sliceEnd, words.length));
+    const slice = slices[beatIdx];
 
     const start = slice.length ? slice[0].start : 0;
     const end = slice.length
@@ -163,6 +211,18 @@ function main() {
     console.log(
       "Timing dari estimasi word-count -- belum ada alignment asli, durasi kasar. Rebuild dengan --align setelah VO + whisper alignment siap."
     );
+  }
+
+  // Whisper alignment leaves a silent gap between beats for the VO's
+  // natural sentence pause (its words end where speech ends, not where the
+  // next beat starts) -- left alone, that gap renders as a blank cut to
+  // the ink background before the next beat's wipe-in even begins. Stretch
+  // each beat's visual to fill through to the next beat's start instead,
+  // so the b-roll/caption holds through the breath rather than flashing
+  // black. No-op for word-count estimation, which is already contiguous.
+  for (let i = 0; i < timedBeats.length - 1; i++) {
+    const gapEnd = timedBeats[i + 1].startFrame;
+    timedBeats[i].durationFrames = Math.max(timedBeats[i].durationFrames, gapEnd - timedBeats[i].startFrame);
   }
 
   const durationFrames = timedBeats.reduce(
