@@ -20,6 +20,7 @@ const emptyTimeline: RenderTimeline = {
   audioSrc: null,
   durationFrames: 30,
   beats: [],
+  grainFrames: [],
 };
 
 export const RemotionRoot: React.FC = () => {

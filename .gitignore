@@ -3,6 +3,7 @@ node_modules/
 .venv/
 build/
 .DS_Store
+assets/
 remotion/public/broll-cache/*
 !remotion/public/broll-cache/.gitkeep
 remotion/public/vo/*

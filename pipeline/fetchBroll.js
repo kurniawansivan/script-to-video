@@ -55,6 +55,12 @@ async function main() {
   mkdirSync(cacheDir, { recursive: true });
 
   for (const beat of beats) {
+    if (beat.title) {
+      console.log(`beat ${beat.index}: title card, skip broll`);
+      beat.broll = null;
+      continue;
+    }
+
     const query = beat.query || beat.keywords.join(" ");
     const hash = createHash("sha1").update(query).digest("hex").slice(0, 10);
     const fileName = `beat-${beat.index}-${hash}.mp4`;

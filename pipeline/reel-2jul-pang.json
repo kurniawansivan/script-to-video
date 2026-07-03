@@ -11,9 +11,14 @@
       "karyaPose": "greet"
     },
     {
-      "text": "Namanya PANG, empat huruf, empat pertanyaan simpel sebelum nge-prompt AI.",
+      "text": "Namanya PANG.",
+      "title": true
+    },
+    {
+      "text": "Empat huruf, empat pertanyaan simpel sebelum nge-prompt AI.",
       "visualQuery": "smartphone notes writing",
-      "karyaPose": "point"
+      "karyaPose": "point",
+      "badge": "TIPS"
     },
     {
       "text": "P itu Peran, kamu mau AI jadi siapa? Copywriter, teman curhat, atau sales?",

@@ -34,6 +34,8 @@ export function beatsFromText(rawText) {
       query: toVisualQuery(keywords),
       karyaPose: "idle",
       cta: false,
+      badge: null,
+      title: false,
     };
   });
 }

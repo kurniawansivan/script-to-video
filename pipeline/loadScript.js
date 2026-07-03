@@ -16,6 +16,12 @@ function beatsFromScenes(scenes) {
       query: scene.visualQuery || toVisualQuery(keywords),
       karyaPose: scene.karyaPose || "idle",
       cta: Boolean(scene.cta),
+      // Optional callout tag rendered top-left, e.g. "TIPS" / "CONTOH" / "FAKTA".
+      badge: scene.badge || null,
+      // Chapter/section break: renders as a centered statement card on a
+      // grainy background instead of the normal broll+caption beat layout
+      // (still spoken/timed like any other scene). See TitleCard.tsx.
+      title: Boolean(scene.title),
     };
   });
 }

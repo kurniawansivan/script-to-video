@@ -58,6 +58,8 @@ Field per scene:
 - `visualQuery` (opsional) — query pencarian b-roll manual. Kosongkan buat auto-translate dari `text` (ID→EN, terbatas, cek hasilnya).
 - `karyaPose` (opsional) — nama pose Karya (`idle`, `greet`, `talking`, `point`, `celebrate`, dst — didefinisikan di `remotion/public/karya/poses.json`). Default `idle`.
 - `cta` (opsional) — tandai scene CTA/penutup.
+- `badge` (opsional) — label callout kecil pojok kiri atas, mis. `"TIPS"`, `"CONTOH"`, `"FAKTA"`. Render sebagai `[ TIPS ]` on-brand amber/ink.
+- `title` (opsional, boolean) — jadiin scene ini chapter card: teks besar di tengah layar background gelap, tanpa b-roll/Karya, buat jeda/pergantian section. Tetap dinarasikan & diberi timing kayak scene biasa.
 
 Jumlah scene bebas, tinggal nambah/kurangin elemen array.
 
@@ -89,11 +91,13 @@ Ditemukan bug race-condition di `remotion render` bawaan: tiap render, dia nyali
 
 - **Kinetic caption per-kata** — tiap kata muncul (pop-in + scale) sesuai timestamp asli dari whisper alignment, bukan satu blok kalimat langsung nongol. Kata yang lagi diucapin di-highlight amber; kata ALLCAPS (AI, PANG, UMKM, dst) permanen amber buat penekanan.
 - **Ken Burns zoom** — b-roll zoom perlahan (1.0→1.08) sepanjang durasi beat, gak pernah benar-benar diam.
-- **Punch-in per cut** — tiap beat baru mulai dengan scale pulse cepat (1.06→1.0), biar transisi kerasa sebagai cut yang disengaja.
+- **Circular wipe reveal per cut** — tiap beat baru "punch hole" masuk dari titik tengah (clip-path circle 0→100vmax dalam 12 frame), bukan sekadar potong-tempel. Terinspirasi pack Envato "punch hole transition" yang di-download user (aset aslinya project AE/FCP, gak bisa dipakai langsung karena Adobe After Effects/Final Cut Pro gak keinstall di environment ini — jadi efeknya dibikin ulang murni CSS, malah resolution-independent).
+- **Film grain overlay** — tekstur noise halus (`mix-blend-mode: overlay`, opacity rendah) nempel di seluruh video, kesan lebih "dibikin", bukan raw footage. Generate ulang framenya: `ffmpeg -f lavfi -i "color=c=gray:s=540x960:d=1:r=10" -vf "format=gray,noise=alls=45:allf=t+u" -pix_fmt gray remotion/public/fx/grain/frame-%02d.png`.
+- **Badge/tag & title card** — lihat field `badge`/`title` di atas.
 - **Progress bar** amber tipis di atas, nunjukkin posisi nonton (dorongan buat nonton sampai habis).
 - **Gradient overlay** di bawah layar buat kontras caption, bukan cuma text-shadow doang.
 
-Semua logic ini ada di `remotion/src/Video.tsx` (BrollBackground, BeatContent, ProgressBar) dan `remotion/src/components/Caption.tsx`.
+Semua logic ini ada di `remotion/src/Video.tsx` (BrollBackground, WipeReveal, BeatContent, ProgressBar) dan `remotion/src/components/` (Caption, Badge, TitleCard, GrainOverlay).
 
 ## Karya mascot — nambah/ganti pose
 
@@ -120,6 +124,7 @@ Pose yang sudah ada sekarang (dari 10 GIF gerak dasar): `idle`, `greet`, `point`
 ## Lain-lain
 
 - **CapCut** tetap opsional buat polish akhir manual kalau perlu, tapi bukan bagian pipeline otomatis (CapCut gak punya API resmi).
+- **`assets/` (gitignored)** — pack Envato yang di-download user (Motion Backgrounds, Motion Shapes, Punch Hole Transitions). Ini semua project file After Effects (`.aep`) / Final Cut Pro (`.motr`), preview mp4 yang ikut kebundle resolusinya kecil (300-500px), gak layak dipakai langsung. AE/FCP gak keinstall di environment ini jadi gak bisa di-render jadi video asli di sini. Kalau mau pakai isinya beneran: render manual di mesin yang ada AE/FCP-nya, taruh hasil mp4-nya di `remotion/public/`, baru saya sambungin ke pipeline. Buat asset motion graphic yang langsung kepake tanpa AE/FCP, cari di Envato Elements bagian **Stock Video** (bukan **Video Templates**) — itu file jadi, bukan project mentah.
 
 ## Aturan brand (wajib diikuti tiap generate)
 

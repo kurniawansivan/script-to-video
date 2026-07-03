@@ -1,10 +1,19 @@
-import { readFileSync, writeFileSync, existsSync } from "node:fs";
+import { readFileSync, writeFileSync, existsSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 
 function loadPoses() {
   const posesPath = resolve("remotion/public/karya/poses.json");
   if (!existsSync(posesPath)) return {};
   return JSON.parse(readFileSync(posesPath, "utf8"));
+}
+
+function listGrainFrames() {
+  const grainDir = resolve("remotion/public/fx/grain");
+  if (!existsSync(grainDir)) return [];
+  return readdirSync(grainDir)
+    .filter((f) => f.endsWith(".png"))
+    .sort()
+    .map((f) => `fx/grain/${f}`);
 }
 
 // Rough Indonesian speaking-pace fallback, only used when no real alignment
@@ -123,6 +132,8 @@ function main() {
     durationFrames: b.durationFrames,
     broll: b.broll ?? null,
     karya: poses[b.karyaPose] ?? null,
+    badge: b.badge ?? null,
+    title: Boolean(b.title),
   }));
 
   const timeline = {
@@ -133,6 +144,7 @@ function main() {
     audioSrc: args.audio ?? null,
     durationFrames,
     beats: renderBeats,
+    grainFrames: listGrainFrames(),
   };
 
   const outPath = resolve("remotion/public/timelines", `${args.slug}.render.json`);

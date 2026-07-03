@@ -135,6 +135,7 @@ function pointRenderJsonAtServer(renderPath, baseUrl) {
     if (beat.karya?.type === "frames") beat.karya.frames = beat.karya.frames.map(toUrl);
   }
   if (timeline.audioSrc) timeline.audioSrc = toUrl(timeline.audioSrc);
+  if (timeline.grainFrames) timeline.grainFrames = timeline.grainFrames.map(toUrl);
 
   writeFileSync(renderPath, JSON.stringify(timeline, null, 2));
 }

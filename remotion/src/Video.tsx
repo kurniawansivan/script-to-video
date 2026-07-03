@@ -1,8 +1,30 @@
 import { AbsoluteFill, Audio, OffthreadVideo, Sequence, interpolate, useCurrentFrame } from "remotion";
 import { Caption, CaptionWord } from "./components/Caption";
 import { KaryaOverlay, KaryaAsset } from "./components/KaryaOverlay";
+import { GrainOverlay } from "./components/GrainOverlay";
+import { Badge } from "./components/Badge";
+import { TitleCard } from "./components/TitleCard";
 import { BRAND } from "./brand";
 import { resolveSrc } from "./resolveSrc";
+
+const WIPE_FRAMES = 12;
+
+// Circular "punch hole" reveal on every cut -- inspired by an Envato punch
+// hole transition pack the user downloaded (its actual asset is an AE/FCP
+// project, unusable without those apps installed here, so this recreates
+// the effect procedurally: a growing clip-path circle, resolution
+// independent and tunable). 100vmax comfortably covers both 9:16 and 4:5
+// corners well before the wipe finishes.
+const WipeReveal: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const frame = useCurrentFrame();
+  const radius = interpolate(frame, [0, WIPE_FRAMES], [0, 100], {
+    extrapolateLeft: "clamp",
+    extrapolateRight: "clamp",
+  });
+  return (
+    <AbsoluteFill style={{ clipPath: `circle(${radius}vmax at 50% 50%)` }}>{children}</AbsoluteFill>
+  );
+};
 
 export type RenderBeat = {
   index: number;
@@ -12,6 +34,8 @@ export type RenderBeat = {
   durationFrames: number;
   broll: string | null;
   karya: KaryaAsset | null;
+  badge: string | null;
+  title: boolean;
 };
 
 export type RenderTimeline = {
@@ -22,6 +46,7 @@ export type RenderTimeline = {
   audioSrc: string | null;
   durationFrames: number;
   beats: RenderBeat[];
+  grainFrames: string[];
 };
 
 // Slow constant zoom on b-roll so nothing on screen is ever fully static --
@@ -50,13 +75,16 @@ const BrollBackground: React.FC<{ src: string; durationInFrames: number }> = ({
 };
 
 const BeatContent: React.FC<{ beat: RenderBeat }> = ({ beat }) => {
-  const frame = useCurrentFrame();
-  // Quick punch-in on every beat cut -- a pattern-interrupt pulse so scene
-  // changes read as deliberate cuts, not just content swaps.
-  const punch = interpolate(frame, [0, 6], [1.06, 1], { extrapolateRight: "clamp" });
+  if (beat.title) {
+    return (
+      <WipeReveal>
+        <TitleCard text={beat.text} durationInFrames={beat.durationFrames} />
+      </WipeReveal>
+    );
+  }
 
   return (
-    <AbsoluteFill style={{ transform: `scale(${punch})` }}>
+    <WipeReveal>
       {beat.broll ? (
         <BrollBackground src={beat.broll} durationInFrames={beat.durationFrames} />
       ) : (
@@ -69,8 +97,9 @@ const BeatContent: React.FC<{ beat: RenderBeat }> = ({ beat }) => {
         }}
       />
       <KaryaOverlay asset={beat.karya} />
+      {beat.badge ? <Badge label={beat.badge} /> : null}
       <Caption words={beat.words} durationInFrames={beat.durationFrames} />
-    </AbsoluteFill>
+    </WipeReveal>
   );
 };
 
@@ -95,7 +124,7 @@ const ProgressBar: React.FC<{ durationFrames: number }> = ({ durationFrames }) =
   );
 };
 
-export const Video: React.FC<RenderTimeline> = ({ audioSrc, beats, durationFrames }) => {
+export const Video: React.FC<RenderTimeline> = ({ audioSrc, beats, durationFrames, grainFrames }) => {
   return (
     <AbsoluteFill style={{ backgroundColor: BRAND.colors.ink }}>
       {beats.map((beat) => (
@@ -103,6 +132,7 @@ export const Video: React.FC<RenderTimeline> = ({ audioSrc, beats, durationFrame
           <BeatContent beat={beat} />
         </Sequence>
       ))}
+      <GrainOverlay frames={grainFrames} />
       <ProgressBar durationFrames={durationFrames} />
       {audioSrc ? <Audio src={resolveSrc(audioSrc)} /> : null}
     </AbsoluteFill>
