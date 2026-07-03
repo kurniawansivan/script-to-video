@@ -60,6 +60,9 @@ Field per scene:
 - `cta` (opsional) — tandai scene CTA/penutup.
 - `badge` (opsional) — label callout kecil pojok kiri atas, mis. `"TIPS"`, `"CONTOH"`, `"FAKTA"`. Render sebagai `[ TIPS ]` on-brand amber/ink.
 - `title` (opsional, boolean) — jadiin scene ini chapter card: teks besar di tengah layar background gelap, tanpa b-roll/Karya, buat jeda/pergantian section. Tetap dinarasikan & diberi timing kayak scene biasa.
+- `style: "statement"` (opsional) — teks kalimat jadi bintang: tipografi besar di tengah layar per-kata (gaya Raymond Chin), b-roll di-dim + blur di belakang. Caption bawah tidak dipakai. Buat hook & kalimat kunci.
+- `stat` (opsional) — `{ "label": "...", "value": "Rp150–300rb", "note": "per paket" }`: kartu angka/harga besar di tengah (label Space Mono amber, value gede spring-pop). VO tetap ngucapin angkanya dalam kata; kartu ini yang dibaca penonton tanpa suara. B-roll otomatis di-dim.
+- Marker `==kata==` di `text` (scene biasa maupun statement) — kata itu dirender dengan blok amber + teks ink (penekanan paling kuat, kayak blok warna di referensi). Marker di-strip dari VO/alignment, aman buat timing.
 
 Jumlah scene bebas, tinggal nambah/kurangin elemen array.
 
@@ -89,12 +92,15 @@ Ditemukan bug race-condition di `remotion render` bawaan: tiap render, dia nyali
 
 ## Gaya editing (biar gak flat)
 
-- **Kinetic caption per-kata** — tiap kata muncul (pop-in + scale) sesuai timestamp asli dari whisper alignment, bukan satu blok kalimat langsung nongol. Kata yang lagi diucapin di-highlight amber; kata ALLCAPS (AI, PANG, UMKM, dst) permanen amber buat penekanan.
-- **Ken Burns zoom** — b-roll zoom perlahan (1.0→1.08) sepanjang durasi beat, gak pernah benar-benar diam.
+- **Kinetic caption per-kata** — tiap kata muncul (pop-in + scale) sesuai timestamp asli dari whisper alignment, bukan satu blok kalimat langsung nongol. Kata yang lagi diucapin di-highlight amber; kata ALLCAPS (AI, PANG, UMKM, dst) permanen amber; `==kata==` dapat blok amber penuh.
+- **Statement & stat card** — lihat field `style`/`stat` di atas; b-roll di-dim (brightness 0.38 + blur) biar tipografi jadi bintang.
+- **Punch-in tiap cut** — scale 1.14→1 settle 9 frame di awal beat, kombinasi sama Ken Burns arah selang-seling per beat (genap zoom-in 1→1.08, ganjil zoom-out 1.08→1) biar kerasa di-edit, bukan template.
+- **Vignette** — sudut layar digelapin halus (radial gradient) di atas semua beat, nambah kontras teks di pinggir.
 - **Circular wipe reveal per cut** — tiap beat baru "punch hole" masuk dari titik tengah (clip-path circle 0→100vmax dalam 12 frame), bukan sekadar potong-tempel. Terinspirasi pack Envato "punch hole transition" yang di-download user (aset aslinya project AE/FCP, gak bisa dipakai langsung karena Adobe After Effects/Final Cut Pro gak keinstall di environment ini — jadi efeknya dibikin ulang murni CSS, malah resolution-independent).
 - **Film grain overlay** — tekstur noise halus (`mix-blend-mode: overlay`, opacity rendah) nempel di seluruh video, kesan lebih "dibikin", bukan raw footage. Generate ulang framenya: `ffmpeg -f lavfi -i "color=c=gray:s=540x960:d=1:r=10" -vf "format=gray,noise=alls=45:allf=t+u" -pix_fmt gray remotion/public/fx/grain/frame-%02d.png`.
 - **Badge/tag & title card** — lihat field `badge`/`title` di atas.
 - **Progress bar** amber tipis di atas, nunjukkin posisi nonton (dorongan buat nonton sampai habis).
+- **Music bed (opsional)** — taruh file di `remotion/public/music/<slug>.mp3` (atau `music/default.mp3` buat semua reel), otomatis di-mix pelan (volume 0.09, fade in/out) di bawah VO. Higgsfield `generate_audio` gak bisa bikin musik (khusus speech), jadi file musiknya cari sendiri (mis. CapCut/Envato stock audio yang berlisensi).
 - **Gradient overlay** di bawah layar buat kontras caption, bukan cuma text-shadow doang.
 
 Semua logic ini ada di `remotion/src/Video.tsx` (BrollBackground, WipeReveal, BeatContent, ProgressBar) dan `remotion/src/components/` (Caption, Badge, TitleCard, GrainOverlay).

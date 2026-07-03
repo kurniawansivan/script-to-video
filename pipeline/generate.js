@@ -40,6 +40,19 @@ function findVoAudio(slug) {
   return null;
 }
 
+// Optional low-volume music bed, mixed under the VO by Video.tsx. Drop a
+// file at remotion/public/music/<slug>.mp3 (or music/default.mp3 shared
+// across reels) and it gets picked up automatically -- absence is fine.
+function findMusic(slug) {
+  for (const name of [slug, "default"]) {
+    for (const ext of ["mp3", "wav", "m4a"]) {
+      const rel = `music/${name}.${ext}`;
+      if (existsSync(resolve("remotion/public", rel))) return rel;
+    }
+  }
+  return null;
+}
+
 function run(cmd, cmdArgs, label) {
   console.log(`\n> ${label}`);
   const res = spawnSync(cmd, cmdArgs, { stdio: "inherit" });
@@ -135,6 +148,7 @@ function pointRenderJsonAtServer(renderPath, baseUrl) {
     if (beat.karya?.type === "frames") beat.karya.frames = beat.karya.frames.map(toUrl);
   }
   if (timeline.audioSrc) timeline.audioSrc = toUrl(timeline.audioSrc);
+  if (timeline.musicSrc) timeline.musicSrc = toUrl(timeline.musicSrc);
   if (timeline.grainFrames) timeline.grainFrames = timeline.grainFrames.map(toUrl);
 
   writeFileSync(renderPath, JSON.stringify(timeline, null, 2));
@@ -190,6 +204,8 @@ async function main() {
     "--height", String(args.height),
   ];
   if (vo) buildArgs.push("--audio", vo);
+  const music = findMusic(slug);
+  if (music) buildArgs.push("--music", music);
   if (alignRel) buildArgs.push("--align", alignRel);
   run("node", buildArgs, "Bangun timeline");
 

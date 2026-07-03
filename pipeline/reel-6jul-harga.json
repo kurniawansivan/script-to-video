@@ -1,0 +1,49 @@
+{
+  "slug": "reel-6jul-harga",
+  "thumbnail": {
+    "headline": "PATOKAN HARGA COPYWRITING 2026",
+    "karyaPose": "idle"
+  },
+  "scenes": [
+    {
+      "text": "Berapa harusnya kamu ==pasang harga== jasa copywriting di 2026?",
+      "style": "statement",
+      "visualQuery": "freelancer thinking laptop night moody",
+      "karyaPose": "idle"
+    },
+    {
+      "text": "Kebanyakan pemula asal banting harga, padahal skill kamu layak dibayar pantas.",
+      "visualQuery": "stressed person working laptop late night",
+      "badge": "FAKTA",
+      "karyaPose": "think"
+    },
+    {
+      "text": "Paket sepuluh caption Instagram, patokannya seratus lima puluh sampai tiga ratus ribu rupiah.",
+      "visualQuery": "typing social media content smartphone",
+      "stat": { "label": "Paket 10 Caption IG", "value": "Rp150–300rb", "note": "per paket" }
+    },
+    {
+      "text": "Satu copy iklan, dua ratus sampai empat ratus ribu rupiah.",
+      "visualQuery": "digital marketing advertising laptop analytics",
+      "stat": { "label": "Copy Iklan", "value": "Rp200–400rb", "note": "per campaign" }
+    },
+    {
+      "text": "Kalau deskripsi produk, dua puluh sampai lima puluh ribu rupiah per item.",
+      "visualQuery": "online shop small business product packaging",
+      "stat": { "label": "Deskripsi Produk", "value": "Rp20–50rb", "note": "per item" }
+    },
+    {
+      "text": "Tiap dapat dua sampai tiga review bagus, ==naikkan harga== dua puluh sampai tiga puluh persen.",
+      "style": "statement",
+      "visualQuery": "business growth chart rising success",
+      "badge": "RUMUS",
+      "karyaPose": "celebrate"
+    },
+    {
+      "text": "Save dulu buat patokan, cara naik kelasnya lengkap di eBook, link di bio.",
+      "visualQuery": "happy person phone smiling scrolling",
+      "karyaPose": "point",
+      "cta": true
+    }
+  ]
+}

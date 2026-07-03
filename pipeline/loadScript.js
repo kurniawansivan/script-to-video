@@ -7,11 +7,15 @@ import { toVisualQuery } from "./visualTerms.id-en.js";
 function beatsFromScenes(scenes) {
   return scenes.map((scene, index) => {
     if (!scene.text) throw new Error(`scenes[${index}] butuh field "text"`);
-    const keywords = extractKeywords(scene.text);
+    // ==word== highlight markers are display-only decoration; strip them
+    // before keyword extraction and word counting so visual-query derivation
+    // and whisper alignment slicing stay in sync with the spoken text.
+    const cleanText = scene.text.replace(/==/g, "");
+    const keywords = extractKeywords(cleanText);
     return {
       index,
       text: scene.text,
-      wordCount: scene.text.split(/\s+/).filter(Boolean).length,
+      wordCount: cleanText.split(/\s+/).filter(Boolean).length,
       keywords,
       query: scene.visualQuery || toVisualQuery(keywords),
       karyaPose: scene.karyaPose || "idle",
@@ -22,6 +26,12 @@ function beatsFromScenes(scenes) {
       // grainy background instead of the normal broll+caption beat layout
       // (still spoken/timed like any other scene). See TitleCard.tsx.
       title: Boolean(scene.title),
+      // "statement": big centered kinetic text over dimmed/blurred b-roll
+      // (the Raymond Chin big-typography look) instead of the bottom caption.
+      style: scene.style || null,
+      // Big number/price callout card: { label, value, note? }. The VO still
+      // narrates the number in words; the card is what sound-off viewers read.
+      stat: scene.stat || null,
     };
   });
 }

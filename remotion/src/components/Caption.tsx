@@ -4,7 +4,14 @@ import { BRAND } from "../brand";
 
 const { fontFamily } = loadFont();
 
-export type CaptionWord = { text: string; startFrame: number; endFrame: number };
+export type CaptionWord = {
+  text: string;
+  startFrame: number;
+  endFrame: number;
+  // From ==word== markers in the script (parsed in buildTimeline.js):
+  // rendered as an amber block behind the word, the strongest emphasis tier.
+  highlight?: boolean;
+};
 
 // ALLCAPS words (AI, PANG, UMKM, DIBAYAR...) get permanent amber emphasis --
 // matches the brand's existing script convention of capitalizing words for
@@ -28,6 +35,25 @@ const Word: React.FC<{ word: CaptionWord }> = ({ word }) => {
   });
   const active = frame >= word.startFrame && frame < word.endFrame;
   const color = active || isEmphasis(word.text) ? BRAND.colors.amber : BRAND.colors.cream;
+
+  if (word.highlight) {
+    return (
+      <span
+        style={{
+          display: "inline-block",
+          opacity,
+          transform: `scale(${pop}) rotate(-1.2deg)`,
+          color: BRAND.colors.ink,
+          backgroundColor: BRAND.colors.amber,
+          padding: "0.02em 0.22em",
+          marginRight: "0.28em",
+          textShadow: "none",
+        }}
+      >
+        {word.text}
+      </span>
+    );
+  }
 
   return (
     <span
