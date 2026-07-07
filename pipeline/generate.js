@@ -149,7 +149,9 @@ function pointRenderJsonAtServer(renderPath, baseUrl) {
   }
   if (timeline.audioSrc) timeline.audioSrc = toUrl(timeline.audioSrc);
   if (timeline.musicSrc) timeline.musicSrc = toUrl(timeline.musicSrc);
+  if (timeline.whooshSrcs) timeline.whooshSrcs = timeline.whooshSrcs.map(toUrl);
   if (timeline.grainFrames) timeline.grainFrames = timeline.grainFrames.map(toUrl);
+  if (timeline.transitionSrcs) timeline.transitionSrcs = timeline.transitionSrcs.map(toUrl);
 
   writeFileSync(renderPath, JSON.stringify(timeline, null, 2));
 }

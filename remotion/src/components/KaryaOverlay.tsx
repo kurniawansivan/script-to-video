@@ -10,7 +10,10 @@ export type KaryaAsset =
 // frame sequences are preferred over animated GIFs here: a GIF's own
 // playback clock doesn't line up with Remotion's per-frame render clock, so
 // its animation phase would drift/judder in the final render.
-export const KaryaOverlay: React.FC<{ asset: KaryaAsset | null }> = ({ asset }) => {
+export const KaryaOverlay: React.FC<{ asset: KaryaAsset | null; size?: "big" | null }> = ({
+  asset,
+  size,
+}) => {
   const frame = useCurrentFrame();
   const { fps: compositionFps } = useVideoConfig();
 
@@ -34,6 +37,14 @@ export const KaryaOverlay: React.FC<{ asset: KaryaAsset | null }> = ({ asset }) 
     );
 
   // % units (not px) so this lands in the same relative spot whether we
-  // render 9:16 or 4:5 -- top-right, with margin so it doesn't hug the edge.
+  // render 9:16 or 4:5. Default: top-right corner accent. "big": Karya as
+  // on-screen host, bottom-right at roughly double size (the content
+  // calendar's "tampil besar" direction for trust-topic beats) -- bottom
+  // so it never collides with Statement/StatCard text in the middle.
+  if (size === "big") {
+    return (
+      <div style={{ position: "absolute", bottom: "9%", right: "5%", width: "48%" }}>{body}</div>
+    );
+  }
   return <div style={{ position: "absolute", top: "7%", right: "6%", width: "26%" }}>{body}</div>;
 };

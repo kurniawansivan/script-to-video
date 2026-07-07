@@ -16,6 +16,31 @@ function listGrainFrames() {
     .map((f) => `fx/grain/${f}`);
 }
 
+// Alpha-channel webm transitions converted from the Envato punch-hole pack
+// (4K fill + luma matte from the FCP Media folders, merged via ffmpeg
+// alphamerge -- see README). Cycled per beat cut in Video.tsx. Empty dir =
+// fall back to the CSS circle wipe.
+function listTransitions() {
+  const dir = resolve("remotion/public/fx/transitions");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".webm"))
+    .sort()
+    .map((f) => `fx/transitions/${f}`);
+}
+
+// Several whoosh variants, cycled per cut in Video.tsx -- one identical
+// whoosh on 7 cuts in a 30s reel reads as a template, slight variation
+// reads as sound design.
+function listWhooshes() {
+  const dir = resolve("remotion/public/fx");
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => /^whoosh.*\.mp3$/.test(f))
+    .sort()
+    .map((f) => `fx/${f}`);
+}
+
 // Rough Indonesian speaking-pace fallback, only used when no real alignment
 // is available yet. Always replace with --align once VO audio exists --
 // word-count timing is a placeholder, not accurate enough to publish.
@@ -157,14 +182,34 @@ function timingsFromAlignment(beats, alignment, fps) {
     return slice;
   });
 
+  // Cuts land in the breath pause BEFORE a sentence, not on its first
+  // word: each beat starts up to LEAD_SECONDS before its first spoken word
+  // (bounded by where the previous sentence actually ends), so the matte
+  // transition plays over silence and has fully opened by the time the VO
+  // -- and therefore the first caption word -- lands. Without this the
+  // paper cover eats the first 2-3 words of every sentence ("captions feel
+  // late").
+  const LEAD_SECONDS = 0.4;
+  // Whisper often reports zero gap between sentences (its end timestamps
+  // overshoot into the pause), which would leave no room for the lead. A
+  // J-cut is allowed instead: the cut may bite up to this far into the
+  // tail of the previous sentence -- standard editing, audio leads video.
+  const MAX_JCUT_SECONDS = 0.2;
+
   return beats.map((beat, beatIdx) => {
     const originalWords = beatWords[beatIdx];
     const slice = slices[beatIdx];
 
-    const start = slice.length ? slice[0].start : 0;
+    const firstWordStart = slice.length ? slice[0].start : 0;
+    const prevSlice = beatIdx > 0 ? slices[beatIdx - 1] : null;
+    const prevEnd = prevSlice && prevSlice.length ? prevSlice[prevSlice.length - 1].end : 0;
+    const start =
+      beatIdx === 0
+        ? 0
+        : Math.max(prevEnd - MAX_JCUT_SECONDS, firstWordStart - LEAD_SECONDS);
     const end = slice.length
       ? slice[slice.length - 1].end
-      : start + beat.wordCount / WORDS_PER_SECOND;
+      : firstWordStart + beat.wordCount / WORDS_PER_SECOND;
     const startFrame = Math.round(start * fps);
     const durationFrames = Math.max(1, Math.round((end - start) * fps));
 
@@ -198,7 +243,7 @@ function main() {
   }
 
   const beatsPath = resolve("remotion/public/timelines", `${args.slug}.beats.json`);
-  const { beats } = JSON.parse(readFileSync(beatsPath, "utf8"));
+  const { beats, endCard } = JSON.parse(readFileSync(beatsPath, "utf8"));
   const poses = loadPoses();
 
   let timedBeats;
@@ -225,7 +270,7 @@ function main() {
     timedBeats[i].durationFrames = Math.max(timedBeats[i].durationFrames, gapEnd - timedBeats[i].startFrame);
   }
 
-  const durationFrames = timedBeats.reduce(
+  let durationFrames = timedBeats.reduce(
     (max, b) => Math.max(max, b.startFrame + b.durationFrames),
     0
   );
@@ -238,11 +283,35 @@ function main() {
     durationFrames: b.durationFrames,
     broll: b.broll ?? null,
     karya: poses[b.karyaPose] ?? null,
+    karyaSize: b.karyaSize ?? null,
     badge: b.badge ?? null,
     title: Boolean(b.title),
     style: b.style ?? null,
     stat: b.stat ?? null,
+    endCard: false,
   }));
+
+  // Un-narrated outro card so the reel breathes for a beat after the CTA
+  // sentence instead of hard-stopping on its last word.
+  if (endCard) {
+    const END_CARD_FRAMES = Math.round(1.6 * args.fps);
+    renderBeats.push({
+      index: renderBeats.length,
+      text: endCard.text || "",
+      words: [],
+      startFrame: durationFrames,
+      durationFrames: END_CARD_FRAMES,
+      broll: null,
+      karya: poses[endCard.karyaPose || "point"] ?? null,
+      karyaSize: null,
+      badge: null,
+      title: false,
+      style: null,
+      stat: null,
+      endCard: true,
+    });
+    durationFrames += END_CARD_FRAMES;
+  }
 
   const timeline = {
     slug: args.slug,
@@ -254,6 +323,8 @@ function main() {
     durationFrames,
     beats: renderBeats,
     grainFrames: listGrainFrames(),
+    transitionSrcs: listTransitions(),
+    whooshSrcs: listWhooshes(),
   };
 
   const outPath = resolve("remotion/public/timelines", `${args.slug}.render.json`);

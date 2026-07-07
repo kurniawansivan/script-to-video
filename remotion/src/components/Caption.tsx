@@ -25,11 +25,11 @@ const Word: React.FC<{ word: CaptionWord }> = ({ word }) => {
   const frame = useCurrentFrame();
   const pop = interpolate(
     frame,
-    [word.startFrame, word.startFrame + 4, word.startFrame + 9],
+    [word.startFrame, word.startFrame + 3, word.startFrame + 7],
     [0.4, 1.18, 1],
     { extrapolateLeft: "clamp", extrapolateRight: "clamp" }
   );
-  const opacity = interpolate(frame, [word.startFrame, word.startFrame + 4], [0, 1], {
+  const opacity = interpolate(frame, [word.startFrame, word.startFrame + 2], [0, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });

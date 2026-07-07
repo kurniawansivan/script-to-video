@@ -1,0 +1,56 @@
+{
+  "slug": "reel-7jul-trust",
+  "thumbnail": {
+    "headline": "KENAPA AKU NGGAK JANJIIN KAMU KAYA SEMINGGU",
+    "karyaPose": "talking"
+  },
+  "scenes": [
+    {
+      "text": "Banyak yang DM nanya, bang ini cepet kaya nggak? Jawaban jujurku bikin sebagian ==unfollow==, dan nggak apa-apa.",
+      "style": "statement",
+      "visualQuery": "person calm honest talk camera",
+      "badge": "JUJUR",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Aku nggak jual mimpi.",
+      "style": "statement",
+      "visualQuery": "person working late dedication laptop",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Skill butuh latihan, klien butuh usaha, hasil butuh waktu.",
+      "visualQuery": "person practicing skill focused work",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Yang aku janjiin cuma satu.",
+      "visualQuery": "person working late dedication laptop",
+      "karyaPose": "point"
+    },
+    {
+      "text": "Kalau kamu kerjain langkahnya ==30 hari==, peluangmu dapat klien pertama nyata.",
+      "style": "statement",
+      "visualQuery": "calendar planning progress steps",
+      "badge": "RUMUS",
+      "karyaPose": "point"
+    },
+    {
+      "text": "Itu beda sama yang janjiin Lamborghini bulan depan.",
+      "visualQuery": "stressed person working laptop late night",
+      "karyaPose": "think"
+    },
+    {
+      "text": "==Bukan cepat kaya==. ==Tapi nyata==.",
+      "style": "statement",
+      "visualQuery": "person calm honest talk camera",
+      "karyaPose": "greet"
+    },
+    {
+      "text": "Follow kalau kamu nyari yang nyata, eBook lengkap di bio.",
+      "visualQuery": "happy person phone smiling scrolling",
+      "karyaPose": "point",
+      "cta": true
+    }
+  ]
+}

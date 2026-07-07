@@ -1,0 +1,55 @@
+{
+  "slug": "reel-8jul-dm",
+  "thumbnail": {
+    "headline": "CARA DM KLIEN TANPA KERASA MAKSA",
+    "karyaPose": "think"
+  },
+  "endCard": {
+    "text": "eBook Karyawan AI — link di bio",
+    "karyaPose": "point"
+  },
+  "scenes": [
+    {
+      "text": "Tapi aku ==introvert==, nggak pede DM orang duluan.",
+      "style": "statement",
+      "visualQuery": "shy person alone window thinking moody",
+      "badge": "JUJUR",
+      "karyaPose": "think",
+      "karyaSize": "big"
+    },
+    {
+      "text": "Kabar baiknya, ini bukan soal kepribadian, tapi soal cara.",
+      "visualQuery": "person typing phone calm confident",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Satu tips konkret, ==jangan jualan== di DM pertama.",
+      "style": "statement",
+      "visualQuery": "hands typing message smartphone close up",
+      "badge": "TIPS",
+      "karyaPose": "point"
+    },
+    {
+      "text": "Cukup komentarin kontennya, terus kasih satu ide kecil yang bisa dia pakai, gratis.",
+      "visualQuery": "person commenting social media laptop smile",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Orang bales karena kamu ==ngasih nilai== duluan, bukan karena kamu maksa.",
+      "style": "statement",
+      "visualQuery": "handshake agreement trust meeting",
+      "karyaPose": "greet"
+    },
+    {
+      "text": "Justru introvert menang di sini, kamu mikir dulu sebelum ngetik.",
+      "visualQuery": "calm person writing notes thinking",
+      "karyaPose": "celebrate"
+    },
+    {
+      "text": "Mau langkah lengkapnya? eBook Karyawan AI ada di bio.",
+      "visualQuery": "happy person phone smiling scrolling",
+      "karyaPose": "point",
+      "cta": true
+    }
+  ]
+}

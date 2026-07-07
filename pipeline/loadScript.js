@@ -19,6 +19,9 @@ function beatsFromScenes(scenes) {
       keywords,
       query: scene.visualQuery || toVisualQuery(keywords),
       karyaPose: scene.karyaPose || "idle",
+      // "big" -> Karya rendered large bottom-right as on-screen host (the
+      // calendar's "tampil besar" note for trust topics). Default corner size.
+      karyaSize: scene.karyaSize || null,
       cta: Boolean(scene.cta),
       // Optional callout tag rendered top-left, e.g. "TIPS" / "CONTOH" / "FAKTA".
       badge: scene.badge || null,
@@ -58,17 +61,21 @@ export function loadScript(inputPath, slugOverride) {
       // Thumbnail.tsx) -- generate.js falls back to deriving one from the
       // first scene's text when this is absent.
       thumbnail: data.thumbnail || null,
+      // Optional { text, karyaPose? } outro card appended after the last
+      // spoken beat (~1.5s, not narrated): handle + closing line so the
+      // reel doesn't hard-stop the instant the CTA sentence ends.
+      endCard: data.endCard || null,
     };
   }
 
   const slug = slugOverride || basename(inputPath, ext);
-  return { slug, beats: beatsFromText(raw), thumbnail: null };
+  return { slug, beats: beatsFromText(raw), thumbnail: null, endCard: null };
 }
 
 export function loadScriptToFile(inputPath, slugOverride) {
-  const { slug, beats, thumbnail } = loadScript(inputPath, slugOverride);
+  const { slug, beats, thumbnail, endCard } = loadScript(inputPath, slugOverride);
   mkdirSync(resolve("remotion/public/timelines"), { recursive: true });
   const outPath = resolve("remotion/public/timelines", `${slug}.beats.json`);
-  writeFileSync(outPath, JSON.stringify({ slug, beats, thumbnail }, null, 2));
-  return { slug, beats, thumbnail, outPath };
+  writeFileSync(outPath, JSON.stringify({ slug, beats, thumbnail, endCard }, null, 2));
+  return { slug, beats, thumbnail, endCard, outPath };
 }

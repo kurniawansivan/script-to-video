@@ -68,6 +68,7 @@ Jumlah scene bebas, tinggal nambah/kurangin elemen array.
 
 Field opsional tambahan di level script (bukan per-scene):
 - `thumbnail: { headline, karyaPose }` — teks besar + pose Karya buat thumbnail. Kosongkan biar auto-diambil dari kalimat scene pertama.
+- `endCard: { text, karyaPose? }` — outro card ~1,6 detik tanpa narasi di akhir reel: handle @pustaka.sukses + satu baris penutup + Karya. Biar reel gak berhenti mendadak pas kata terakhir CTA.
 
 **2. Siapkan voiceover** — minta Claude generate TTS lewat Higgsfield di chat (**pakai `text2speech_v2` variant `minimax`**, bukan `seed_audio` — seed_audio kedengeran aksen asing buat Bahasa Indonesia, minimax jauh lebih natural, sudah dibandingin langsung), atau upload rekaman asli. Simpan ke `remotion/public/vo/<slug>.mp3` (nama file harus sama dengan `slug` di JSON).
 
@@ -95,6 +96,10 @@ Ditemukan bug race-condition di `remotion render` bawaan: tiap render, dia nyali
 - **Kinetic caption per-kata** — tiap kata muncul (pop-in + scale) sesuai timestamp asli dari whisper alignment, bukan satu blok kalimat langsung nongol. Kata yang lagi diucapin di-highlight amber; kata ALLCAPS (AI, PANG, UMKM, dst) permanen amber; `==kata==` dapat blok amber penuh.
 - **Statement & stat card** — lihat field `style`/`stat` di atas; b-roll di-dim (brightness 0.38 + blur) biar tipografi jadi bintang.
 - **Punch-in tiap cut** — scale 1.14→1 settle 9 frame di awal beat, kombinasi sama Ken Burns arah selang-seling per beat (genap zoom-in 1→1.08, ganjil zoom-out 1.08→1) biar kerasa di-edit, bukan template.
+- **Transisi punch-hole ASLI dari pack Envato** — file 4K fill + luma matte di `assets/.../Final Cut Pro/*/Media/` (bukan preview kecil di root pack!) di-convert jadi webm alpha 1080×1920 (`ffmpeg alphamerge`, **dengan 0,42 detik awal di-trim** — bagian itu cuma hold gelap sebelum lubangnya mulai gerak, kalau gak di-trim dia nutupin kata pertama tiap kalimat) ke `remotion/public/fx/transitions/*.webm`. Auto-kedetect, dirotasi per cut, di-skip di beat pertama (hook harus keliatan dari frame satu). Kalau folder kosong, fallback ke wipe CSS. Cut-nya sendiri ditaruh di jeda napas ~0,4 detik SEBELUM kata pertama kalimat berikutnya (boleh J-cut max 0,2 detik makan ekor kalimat sebelumnya) — bukan pas kata pertama bunyi.
+- **Whoosh SFX tiap cut** — `remotion/public/fx/whoosh-1/2/3.mp3`, disintesis ffmpeg (noise sweep beda karakter), dirotasi per cut biar gak monoton, skip di beat pertama. Ganti file-file itu kalau mau karakter beda.
+- **Color grade seragam** — contrast+desaturate tipis di semua b-roll + overlay teal soft-light global, biar footage Pexels yang beda-beda white balance kerasa satu kesatuan yang di-grade.
+- **Karya "tampil besar"** — `"karyaSize": "big"` per scene: Karya gede kanan-bawah (arahan kalender buat topik trust). Jangan gabung sama scene caption biasa (tabrakan sama teks bawah) — pakai di scene statement.
 - **Vignette** — sudut layar digelapin halus (radial gradient) di atas semua beat, nambah kontras teks di pinggir.
 - **Circular wipe reveal per cut** — tiap beat baru "punch hole" masuk dari titik tengah (clip-path circle 0→100vmax dalam 12 frame), bukan sekadar potong-tempel. Terinspirasi pack Envato "punch hole transition" yang di-download user (aset aslinya project AE/FCP, gak bisa dipakai langsung karena Adobe After Effects/Final Cut Pro gak keinstall di environment ini — jadi efeknya dibikin ulang murni CSS, malah resolution-independent).
 - **Film grain overlay** — tekstur noise halus (`mix-blend-mode: overlay`, opacity rendah) nempel di seluruh video, kesan lebih "dibikin", bukan raw footage. Generate ulang framenya: `ffmpeg -f lavfi -i "color=c=gray:s=540x960:d=1:r=10" -vf "format=gray,noise=alls=45:allf=t+u" -pix_fmt gray remotion/public/fx/grain/frame-%02d.png`.
@@ -130,7 +135,7 @@ Pose yang sudah ada sekarang (dari 10 GIF gerak dasar): `idle`, `greet`, `point`
 ## Lain-lain
 
 - **CapCut** tetap opsional buat polish akhir manual kalau perlu, tapi bukan bagian pipeline otomatis (CapCut gak punya API resmi).
-- **`assets/` (gitignored)** — pack Envato yang di-download user (Motion Backgrounds, Motion Shapes, Punch Hole Transitions). Ini semua project file After Effects (`.aep`) / Final Cut Pro (`.motr`), preview mp4 yang ikut kebundle resolusinya kecil (300-500px), gak layak dipakai langsung. AE/FCP gak keinstall di environment ini jadi gak bisa di-render jadi video asli di sini. Kalau mau pakai isinya beneran: render manual di mesin yang ada AE/FCP-nya, taruh hasil mp4-nya di `remotion/public/`, baru saya sambungin ke pipeline. Buat asset motion graphic yang langsung kepake tanpa AE/FCP, cari di Envato Elements bagian **Stock Video** (bukan **Video Templates**) — itu file jadi, bukan project mentah.
+- **`assets/` (gitignored)** — pack Envato yang di-download user. Status per pack: **Punch Hole Transitions = KEPAKE** (folder `Final Cut Pro/*/Media/` isinya fill + luma matte 4K, sudah di-convert ke `remotion/public/fx/transitions/`); Motion Typography & Motion Backgrounds & Motion Shapes = project `.aep` doang, preview bundelnya cuma 340×192–480×270, gak layak di 1080p — look-nya direplika prosedural di `MotionAccents.tsx`. Kalau mau pakai isinya beneran: render manual di mesin yang ada AE-nya, taruh hasil mp4/webm-nya di `remotion/public/`, baru disambungin ke pipeline. Buat asset motion graphic yang langsung kepake tanpa AE/FCP, cari di Envato Elements bagian **Stock Video** (bukan **Video Templates**) — itu file jadi, bukan project mentah.
 
 ## Aturan brand (wajib diikuti tiap generate)
 

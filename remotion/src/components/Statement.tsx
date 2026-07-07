@@ -18,11 +18,15 @@ const StatementWord: React.FC<{ word: CaptionWord }> = ({ word }) => {
     fps,
     config: { damping: 200, stiffness: 260 },
   });
-  const opacity = interpolate(frame, [word.startFrame, word.startFrame + 3], [0, 1], {
+  // Unspoken words sit at low opacity instead of invisible: the full
+  // sentence is always readable (screen never looks half-empty waiting for
+  // the VO) and each word still visibly ignites on its spoken timestamp --
+  // the lyric-video treatment rather than a fill-in-the-blanks one.
+  const opacity = interpolate(frame, [word.startFrame, word.startFrame + 3], [0.25, 1], {
     extrapolateLeft: "clamp",
     extrapolateRight: "clamp",
   });
-  const scale = interpolate(drive, [0, 1], [0.75, 1]);
+  const scale = interpolate(drive, [0, 1], [0.9, 1]);
   const active = frame >= word.startFrame && frame < word.endFrame;
 
   if (word.highlight) {
