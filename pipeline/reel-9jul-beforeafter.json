@@ -1,0 +1,62 @@
+{
+  "slug": "reel-9jul-beforeafter",
+  "thumbnail": {
+    "headline": "CAPTION BIASA VS CAPTION YANG JUAL",
+    "karyaPose": "point"
+  },
+  "endCard": {
+    "text": "Comment produkmu — 1 ide caption gratis",
+    "karyaPose": "point"
+  },
+  "scenes": [
+    {
+      "text": "Caption biasa sama caption yang ==JUAL==, bedanya cuma satu kalimat.",
+      "style": "statement",
+      "visualQuery": "typing laptop copywriting closeup",
+      "karyaPose": "idle"
+    },
+    {
+      "text": "Caption biasa: keripik pedas enak, murah, yuk dibeli.",
+      "visualQuery": "potato chips snack food",
+      "badge": "BIASA",
+      "karyaPose": "think"
+    },
+    {
+      "text": "Caption yang jual: pedas level lima, digoreng tiap pagi, ==tanpa pengawet==.",
+      "style": "statement",
+      "visualQuery": "frying chips cooking kitchen",
+      "badge": "YANG JUAL",
+      "karyaPose": "point"
+    },
+    {
+      "text": "Bedanya? Spesifik. Enak bisa diklaim semua orang.",
+      "style": "statement",
+      "visualQuery": "person thinking idea lightbulb",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Contoh lagi. Kopi susu gula aren, enak banget, ayo coba.",
+      "visualQuery": "iced coffee milk drink cafe",
+      "badge": "BIASA",
+      "karyaPose": "think"
+    },
+    {
+      "text": "Ganti jadi: kopi yang ==baru diseduh== pas kamu order, bukan stok dingin dari pagi.",
+      "style": "statement",
+      "visualQuery": "barista pouring fresh coffee",
+      "badge": "YANG JUAL",
+      "karyaPose": "point"
+    },
+    {
+      "text": "Satu detail kecil, pembeli langsung kebayang bedanya.",
+      "visualQuery": "happy customer buying smiling",
+      "karyaPose": "celebrate"
+    },
+    {
+      "text": "Save dulu, terus comment produkmu, aku kasih satu ide caption gratis.",
+      "visualQuery": "person phone commenting social media",
+      "karyaPose": "point",
+      "cta": true
+    }
+  ]
+}
