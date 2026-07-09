@@ -1,0 +1,43 @@
+{
+  "slug": "reel-10jul-plan",
+  "thumbnail": {
+    "headline": "PETA 30 HARI KE KLIEN PERTAMA",
+    "karyaPose": "point"
+  },
+  "endCard": {
+    "text": "Comment PLAN — peta 30 hari gratis",
+    "karyaPose": "celebrate"
+  },
+  "scenes": [
+    {
+      "text": "Masih bingung ==mulai dari mana==?",
+      "style": "statement",
+      "visualQuery": "confused person thinking laptop overwhelmed",
+      "karyaPose": "think"
+    },
+    {
+      "text": "Aku udah bikinin peta hari-per-harinya, ==gratis==.",
+      "style": "statement",
+      "visualQuery": "roadmap planning notebook writing",
+      "karyaPose": "greet"
+    },
+    {
+      "text": "Rencana 30 hari, dari belajar skill, bikin portfolio, sampai nutup klien pertama.",
+      "visualQuery": "checklist productivity planner desk",
+      "badge": "PETA 30 HARI",
+      "karyaPose": "talking"
+    },
+    {
+      "text": "Detail per hari, tinggal ikutin.",
+      "visualQuery": "calendar planner marking days",
+      "stat": { "label": "Peta 30 Hari", "value": "Hari 1 → 30", "note": "skill → portfolio → klien pertama" }
+    },
+    {
+      "text": "Comment ==PLAN==, aku kirim ke DM kamu, nol biaya.",
+      "style": "statement",
+      "visualQuery": "person typing phone social media",
+      "karyaPose": "point",
+      "cta": true
+    }
+  ]
+}
